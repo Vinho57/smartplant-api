@@ -17,7 +17,7 @@ values = [d["temperature"], d["ground_humidity"], d["air_humidity"], d["HoS"]]
 
 # Balkendiagramm erstellen
 fig = go.Figure([go.Bar(x=labels, y=values)])
-fig.update_layout(title="Durchschnittswerte im aktuellen Monat")
+fig.update_layout()
 
 # HTML speichern
 fig.write_html("diagramme/datenwerte.html")
