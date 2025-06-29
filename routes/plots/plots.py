@@ -11,27 +11,26 @@ plots_blueprint = Blueprint('plots', __name__)
 def render_plot(generate_plot_func, df):
     return Response(generate_plot_func(df=df), mimetype='text/html')
 
-def handle_plot(pot_id, plot_func, use_sunlight=False):
+@plots_blueprint.route("/plots/all", methods=["GET"])
+def render_all_plots():
+    pot_id = int(request.args.get("pot_id", 1))
     api = ApiHandler("http://localhost:5001", pot_id)
-    df = api.get_sunlight_df() if use_sunlight else api.get_df()
-    return render_plot(plot_func, df)
 
-@plots_blueprint.route("/plots/temperature", methods=["GET"])
-def render_temperature_plot():
-    pot_id = int(request.args.get("pot_id", 1))
-    return handle_plot(pot_id, generate_temperatur_plot)
+    df = api.get_latest_df()
+    df_sunlight = api.get_sunlight_df()
 
-@plots_blueprint.route("/plots/soil", methods=["GET"])
-def render_soil_plot():
-    pot_id = int(request.args.get("pot_id", 1))
-    return handle_plot(pot_id, generate_bodenfeuchtigkeit_plot)
+    html_temp = generate_temperatur_plot(df)
+    html_soil = generate_bodenfeuchtigkeit_plot(df)
+    html_air = generate_luftfeuchtigkeit_plot(df)
+    html_sun = generate_sonnenstunden_plot(df_sunlight)
 
-@plots_blueprint.route("/plots/luftfeuchtigkeit", methods=["GET"])
-def render_luftfeuchtigkeit_plot():
-    pot_id = int(request.args.get("pot_id", 1))
-    return handle_plot(pot_id, generate_luftfeuchtigkeit_plot)
+    html = f"""
+    <html><body>
+        <h2>Temperatur</h2>{html_temp}
+        <h2>Bodenfeuchtigkeit</h2>{html_soil}
+        <h2>Luftfeuchtigkeit</h2>{html_air}
+        <h2>Sonnenstunden</h2>{html_sun}
+    </body></html>
+    """
 
-@plots_blueprint.route("/plots/sunlight", methods=["GET"])
-def render_sunlight_plot():
-    pot_id = int(request.args.get("pot_id", 1))
-    return handle_plot(pot_id, generate_sonnenstunden_plot, use_sunlight=True)
+    return Response(html, mimetype='text/html')
