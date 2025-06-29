@@ -2,12 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from routes.plots.plot_utils import get_standard_layout
 
-def generate_sonnenstunden_plot(df=None, use_dummy=False):
-    if use_dummy or df is None:
-        dates = pd.date_range(end=pd.Timestamp.today(), periods=30)
-        sunlight = [round(max(0, 12 + 4 * (0.5 - i % 3))) for i in range(30)]
-        df = pd.DataFrame({"created": dates, "sunlight": sunlight})
-
+def generate_sonnenstunden_plot(df):
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=df["created"],
