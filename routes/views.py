@@ -23,8 +23,8 @@ views_blueprint = Blueprint('views', __name__)
 def ping():
     return jsonify({"message": "API läuft"})
 
-@views_blueprint.route("/average-measurements", methods=["GET"])
-def average_measurements():
+@views_blueprint.route("/latest-today", methods=["GET"])
+def get_all_today():
     pot_id = request.args.get('pot_id', default=1, type=int)
     query = "SELECT * FROM viw_AllValues_Today WHERE pot_id = %s"
     return fetch_query_results(query, pot_id)

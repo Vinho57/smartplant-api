@@ -1,12 +1,9 @@
-import os
 import pandas as pd
 import plotly.graph_objects as go
-from routes.plots.plots import fetch_plot_data
+from routes.plots.plot_utils import get_standard_layout
 
-def generate_temperatur_plot(pot_id: int) -> str:
-    USE_DUMMY = os.getenv("USE_DUMMY", "true").lower() == "true"
-
-    if USE_DUMMY:
+def generate_temperatur_plot(df=None, use_dummy=True):
+    if use_dummy or df is None:
         data = [
             {"created": "2025-06-22 08:00:00", "temperature": 21.3},
             {"created": "2025-06-22 09:00:00", "temperature": 21.5},
@@ -21,15 +18,10 @@ def generate_temperatur_plot(pot_id: int) -> str:
             {"created": "2025-06-22 18:00:00", "temperature": 22.1},
             {"created": "2025-06-22 19:00:00", "temperature": 21.5}
         ]
-    else:
-        url = f"http://localhost:5000/latest-today?pot_id={pot_id}"
-        data = fetch_plot_data(url, {"temperature": "temperature"})
-
-    df = pd.DataFrame(data)
-    df['created'] = pd.to_datetime(df['created'])
+        df = pd.DataFrame(data)
+        df["created"] = pd.to_datetime(df["created"])
 
     fig = go.Figure()
-
     fig.add_trace(go.Scatter(
         x=df['created'],
         y=df['temperature'],
@@ -41,28 +33,15 @@ def generate_temperatur_plot(pot_id: int) -> str:
         name='Temperatur'
     ))
 
-    fig.update_layout(
-        title_x=None,
-        xaxis=dict(
-            title="Zeit",
-            tickformat="%H:%M",
-            dtick=3600000.0,
-            showgrid=False,
-            tickmode="auto"
-        ),
-        yaxis=dict(
-            title="Temperatur (°C)",
-            ticksuffix=" °C",
-            showgrid=True,
-            gridcolor="lightgrey",
-            range=[15, 26]
-        ),
-        plot_bgcolor="white",
-        font=dict(family="Arial", size=14),
-        margin=dict(l=40, r=20, t=60, b=40),
-        modebar=dict(remove=["zoom", "pan", "select", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d"]),
-        showlegend=False,
-        dragmode=False,
+    layout = get_standard_layout(
+        x_title="Zeit",
+        y_title="Temperatur (°C)",
+        y_range=[df["temperature"].min() - 1, df["temperature"].max() + 1],
+        x_range=[
+            str(df["created"].min().replace(hour=0, minute=0)),
+            str(df["created"].max().replace(hour=23, minute=59))
+        ]
     )
+    fig.update_layout(layout)
 
     return fig.to_html(include_plotlyjs='cdn', config=dict(displayModeBar=False))

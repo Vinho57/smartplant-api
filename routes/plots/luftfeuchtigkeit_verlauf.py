@@ -1,12 +1,9 @@
-import os
-from routes.plots.plots import fetch_plot_data
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objects as go
+from routes.plots.plot_utils import get_standard_layout
 
-USE_DUMMY = os.getenv("USE_DUMMY", "true").lower() == "true"
-
-def generate_luftfeuchtigkeit_plot(pot_id: int) -> str:
-    if USE_DUMMY:
+def generate_luftfeuchtigkeit_plot(df=None, use_dummy=False):
+    if use_dummy or df is None:
         data = {
             "created": pd.to_datetime([
                 "2025-06-25 06:00", "2025-06-25 07:00", "2025-06-25 08:00", "2025-06-25 09:00",
@@ -16,12 +13,8 @@ def generate_luftfeuchtigkeit_plot(pot_id: int) -> str:
             "luftfeuchtigkeit": [78, 75, 60, 70, 65, 75, 72, 68, 66, 70, 74, 65, 62]
         }
         df = pd.DataFrame(data)
-    else:
-        url = f"http://localhost:5001/latest-today?pot_id={pot_id}"
-        df = fetch_plot_data(url, {"luftfeuchtigkeit": "air_humidity"})
 
     fig = go.Figure()
-
     fig.add_trace(go.Scatter(
         x=df["created"],
         y=df["luftfeuchtigkeit"],
@@ -31,25 +24,12 @@ def generate_luftfeuchtigkeit_plot(pot_id: int) -> str:
         line=dict(color='blue', width=4),
     ))
 
-    fig.update_layout(
-        xaxis=dict(
-            title="Zeit",
-            tickformat="%H:%M",
-            automargin=True,
-            range=["2025-06-25 06:00", "2025-06-25 23:00"],
-            nticks=6
-        ),
-        yaxis=dict(
-            title="Luftfeuchtigkeit (%)",
-            showgrid=True,
-            gridcolor="lightgrey",
-            gridwidth=1,
-            range=[20, 100]
-        ),
-        title_x=None,
-        plot_bgcolor="white",
-        font=dict(family="Arial", size=14),
-        margin=dict(l=40, r=20, t=40, b=40),
+    layout = get_standard_layout(
+        x_title="Zeit",
+        y_title="Luftfeuchtigkeit (%)",
+        y_range=[20, 100],
+        x_range=["2025-06-25 00:00", "2025-06-25 23:59"]
     )
+    fig.update_layout(layout)
 
     return fig.to_html(include_plotlyjs='cdn', config=dict(displayModeBar=False))
