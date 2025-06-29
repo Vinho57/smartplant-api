@@ -2,9 +2,8 @@ import pandas as pd
 import requests
 
 class ApiHandler:
-    def __init__(self, base_url: str, pot_id: int = 1):
-        self.url = f"{base_url}/latest-today?pot_id={pot_id}"
-        self.pot_id = pot_id
+    def __init__(self, base_url: str):
+        self.base_url = base_url
 
     def _parse_response(self, response):
         if response.status_code == 200:
@@ -15,10 +14,7 @@ class ApiHandler:
         else:
             return pd.DataFrame()
 
-    def get_latest_df(self):
-        response = requests.get(self.url)
-        return self._parse_response(response)
-
-    def get_sunlight_df(self):
-        response = requests.get(f"http://localhost:5001/sunlight-30days?pot_id={self.pot_id}")
+    def get_data(self, endpoint: str, pot_id: int):
+        url = f"{self.base_url}/{endpoint}?pot_id={pot_id}"
+        response = requests.get(url)
         return self._parse_response(response)

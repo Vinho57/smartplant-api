@@ -8,29 +8,32 @@ from routes.plots.sonnenstunden import generate_sonnenstunden_plot
 
 plots_blueprint = Blueprint('plots', __name__)
 
+api_handler = ApiHandler("http://localhost:5001")
+
 def render_plot(generate_plot_func, df):
     return Response(generate_plot_func(df=df), mimetype='text/html')
 
-@plots_blueprint.route("/plots/all", methods=["GET"])
-def render_all_plots():
+
+@plots_blueprint.route("/plots/temperature", methods=["GET"])
+def render_temperature_plot():
     pot_id = int(request.args.get("pot_id", 1))
-    api = ApiHandler("http://localhost:5001", pot_id)
+    df = api_handler.get_data("latest-today", pot_id)
+    return Response(generate_temperatur_plot(df), mimetype="text/html")
 
-    df = api.get_latest_df()
-    df_sunlight = api.get_sunlight_df()
+@plots_blueprint.route("/plots/soil", methods=["GET"])
+def render_soil_plot():
+    pot_id = int(request.args.get("pot_id", 1))
+    df = api_handler.get_data("latest-today", pot_id)
+    return Response(generate_bodenfeuchtigkeit_plot(df), mimetype="text/html")
 
-    html_temp = generate_temperatur_plot(df)
-    html_soil = generate_bodenfeuchtigkeit_plot(df)
-    html_air = generate_luftfeuchtigkeit_plot(df)
-    html_sun = generate_sonnenstunden_plot(df_sunlight)
+@plots_blueprint.route("/plots/luftfeuchtigkeit", methods=["GET"])
+def render_luftfeuchtigkeit_plot():
+    pot_id = int(request.args.get("pot_id", 1))
+    df = api_handler.get_data("latest-today", pot_id)
+    return Response(generate_luftfeuchtigkeit_plot(df), mimetype="text/html")
 
-    html = f"""
-    <html><body>
-        <h2>Temperatur</h2>{html_temp}
-        <h2>Bodenfeuchtigkeit</h2>{html_soil}
-        <h2>Luftfeuchtigkeit</h2>{html_air}
-        <h2>Sonnenstunden</h2>{html_sun}
-    </body></html>
-    """
-
-    return Response(html, mimetype='text/html')
+@plots_blueprint.route("/plots/sunlight", methods=["GET"])
+def render_sunlight_plot():
+    pot_id = int(request.args.get("pot_id", 1))
+    df = api_handler.get_data("sunlight-30days", pot_id)
+    return Response(generate_sonnenstunden_plot(df), mimetype="text/html")
